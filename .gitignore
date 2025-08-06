@@ -1,0 +1,12 @@
+__pycache__/
+.env
+.env.*
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.db
+*.sqlite
+*.log
+node_modules/
+streamlit/*
