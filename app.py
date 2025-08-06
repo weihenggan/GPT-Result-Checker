@@ -120,6 +120,33 @@ if st.session_state.df is not None:
         else:
             st.write(record)
 
+    st.subheader("Compare Model Results")
+    if 'Model' in edited_df.columns and result_col:
+        compare_case = st.selectbox(
+            "Casenumber to compare", sorted(edited_df['casenumber'].astype(str).unique()), key="compare_case"
+        )
+        compare_df = edited_df[edited_df['casenumber'].astype(str) == compare_case]
+        if file_col and file_col in compare_df.columns:
+            file_options = sorted(compare_df[file_col].dropna().astype(str).unique())
+            if file_options:
+                compare_file = st.selectbox(
+                    "Attachment", file_options, key="compare_file"
+                )
+                compare_df = compare_df[
+                    compare_df[file_col].astype(str) == compare_file
+                ]
+        compare_df = compare_df[["Model", result_col]].drop_duplicates()
+        if compare_df.empty:
+            st.info("No results found for the selection.")
+        else:
+            st.dataframe(compare_df)
+            if compare_df[result_col].nunique() > 1:
+                st.warning("Results differ across models.")
+            else:
+                st.success("All models returned the same result.")
+    else:
+        st.info("Comparison requires Model and result columns.")
+
     st.subheader("Statistics")
     st.write(
         edited_df['environment'].value_counts().rename("count")
