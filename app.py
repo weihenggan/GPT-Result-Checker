@@ -23,28 +23,47 @@ if st.session_state.df is not None:
     env_filter = st.sidebar.multiselect(
         "Environment", options=sorted(df['environment'].dropna().unique())
     )
-    prompt_filter = st.sidebar.multiselect(
-        "Prompt Name", options=sorted(df['Prompt Name'].dropna().unique())
-    )
-    model_filter = st.sidebar.multiselect(
-        "Model", options=sorted(df['Model'].dropna().unique())
-    )
-    file_filter = st.sidebar.multiselect(
-        "FileName", options=sorted(df['FileName'].dropna().unique())
-    )
+
+    prompt_filter = []
+    if 'Prompt Name' in df.columns:
+        prompt_filter = st.sidebar.multiselect(
+            "Prompt Name", options=sorted(df['Prompt Name'].dropna().unique())
+        )
+
+    model_filter = []
+    if 'Model' in df.columns:
+        model_filter = st.sidebar.multiselect(
+            "Model", options=sorted(df['Model'].dropna().unique())
+        )
+
+    file_filter = []
+    file_col = None
+    if 'FileName' in df.columns:
+        file_col = 'FileName'
+        file_filter = st.sidebar.multiselect(
+            "FileName", options=sorted(df[file_col].dropna().unique())
+        )
+    elif 'attachment_name' in df.columns:
+        file_col = 'attachment_name'
+        file_filter = st.sidebar.multiselect(
+            "Attachment Name", options=sorted(df[file_col].dropna().unique())
+        )
+
     search_case = st.sidebar.text_input("Search casenumber")
 
     filtered_df = df.copy()
     if env_filter:
         filtered_df = filtered_df[filtered_df['environment'].isin(env_filter)]
-    if prompt_filter:
+    if prompt_filter and 'Prompt Name' in df.columns:
         filtered_df = filtered_df[filtered_df['Prompt Name'].isin(prompt_filter)]
-    if model_filter:
+    if model_filter and 'Model' in df.columns:
         filtered_df = filtered_df[filtered_df['Model'].isin(model_filter)]
-    if file_filter:
-        filtered_df = filtered_df[filtered_df['FileName'].isin(file_filter)]
+    if file_filter and file_col:
+        filtered_df = filtered_df[filtered_df[file_col].isin(file_filter)]
     if search_case:
-        filtered_df = filtered_df[filtered_df['casenumber'].astype(str).str.contains(search_case)]
+        filtered_df = filtered_df[
+            filtered_df['casenumber'].astype(str).str.contains(search_case)
+        ]
 
     st.sidebar.header("Batch Actions")
     selected_cases = st.sidebar.multiselect(
@@ -63,16 +82,20 @@ if st.session_state.df is not None:
         st.session_state.df = df
 
     st.subheader("Records")
+    result_col = next((col for col in ['Response', 'Result'] if col in df.columns), None)
+    column_config = {
+        "Validation Status": st.column_config.SelectboxColumn(
+            "Validation Status",
+            options=['', 'Valid', 'Invalid', 'Needs Review'],
+        ),
+    }
+    if result_col:
+        column_config[result_col] = st.column_config.TextColumn(width="large")
+
     edited_df = st.data_editor(
         filtered_df,
         num_rows="dynamic",
-        column_config={
-            "Result": st.column_config.TextColumn(width="large"),
-            "Validation Status": st.column_config.SelectboxColumn(
-                "Validation Status",
-                options=['', 'Valid', 'Invalid', 'Needs Review'],
-            ),
-        },
+        column_config=column_config,
         hide_index=True,
         key="data_editor",
     )
@@ -90,9 +113,12 @@ if st.session_state.df is not None:
         record = edited_df[
             edited_df['casenumber'].astype(str) == case_view
         ].iloc[0]
-        st.write(record.drop("Result"))
-        with st.expander("Result"):
-            st.write(record["Result"])
+        if result_col and result_col in record:
+            st.write(record.drop(result_col))
+            with st.expander(result_col):
+                st.write(record[result_col])
+        else:
+            st.write(record)
 
     st.subheader("Statistics")
     st.write(
