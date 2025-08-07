@@ -38,6 +38,17 @@ def main() -> None:
 
     summary_df = generate_summary(comp_df)
 
+    if "validations" not in st.session_state:
+        st.session_state["validations"] = {}
+
+    total_pairs = len(comp_df) * len(PROMPT_COLUMNS)
+    validated_count = len(st.session_state["validations"])
+    remaining = total_pairs - validated_count
+
+    st.subheader("Validation Progress")
+    st.write(f"Validated: {validated_count} | Remaining: {remaining}")
+    st.progress(validated_count / total_pairs if total_pairs else 0)
+
     st.subheader("Comparison Details")
     st.dataframe(comp_df)
 
@@ -71,6 +82,57 @@ def main() -> None:
     col1.text_area("NPR", npr_text, height=500)
     col2.text_area("Sandbox", sandbox_text, height=500)
 
+    key = f"{case_num}|{attach_name}|{prompt}"
+    validation = st.session_state["validations"].get(key, {})
+
+    label_options = ["", "Correct", "Acceptable", "Wrong"]
+    index = label_options.index(validation.get("label", ""))
+    label = st.radio(
+        "Label",
+        label_options,
+        index=index,
+        format_func=lambda x: "Select Label" if x == "" else x,
+        key=f"label_{key}",
+    )
+
+    acceptable_reason = ""
+    if label == "Acceptable":
+        acceptable_reason = st.text_input(
+            "Acceptable Reason",
+            value=validation.get("acceptable_reason", ""),
+            key=f"acceptable_{key}",
+        )
+    else:
+        st.session_state.pop(f"acceptable_{key}", None)
+
+    standard_response = st.text_area(
+        "Standard Response",
+        value=validation.get("standard_response", ""),
+        height=120,
+        key=f"standard_{key}",
+    )
+    remark = st.text_area(
+        "Remark",
+        value=validation.get("remark", ""),
+        height=120,
+        key=f"remark_{key}",
+    )
+
+    if label:
+        st.session_state["validations"][key] = {
+            "case_num": case_num,
+            "attachment_name": attach_name,
+            "prompt": prompt,
+            "npr": npr_text,
+            "sandbox": sandbox_text,
+            "label": label,
+            "acceptable_reason": st.session_state.get(f"acceptable_{key}", ""),
+            "standard_response": standard_response,
+            "remark": remark,
+        }
+    else:
+        st.session_state["validations"].pop(key, None)
+
     status, detail = compare_values(npr_text, sandbox_text)
     if status == "DIFFERENT" and detail:
         st.subheader("Diff")
@@ -88,6 +150,29 @@ def main() -> None:
         file_name="comparison_report.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
+
+    if st.session_state["validations"]:
+        export_df = pd.DataFrame(
+            {
+                "Case/Attachment ID": [
+                    f"{v['case_num']} | {v['attachment_name']}" for v in st.session_state["validations"].values()
+                ],
+                "Prompt": [v["prompt"] for v in st.session_state["validations"].values()],
+                "NPR Result": [v["npr"] for v in st.session_state["validations"].values()],
+                "Sandbox Result": [v["sandbox"] for v in st.session_state["validations"].values()],
+                "Label": [v["label"] for v in st.session_state["validations"].values()],
+                "Acceptable Reason": [v["acceptable_reason"] for v in st.session_state["validations"].values()],
+                "Standard Response": [v["standard_response"] for v in st.session_state["validations"].values()],
+                "Remark": [v["remark"] for v in st.session_state["validations"].values()],
+            }
+        )
+        csv_data = export_df.to_csv(index=False).encode("utf-8")
+        st.download_button(
+            "Save Validation Results",
+            data=csv_data,
+            file_name="validation_results.csv",
+            mime="text/csv",
+        )
 
 
 if __name__ == "__main__":
