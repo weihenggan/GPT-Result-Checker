@@ -60,18 +60,17 @@ def show_json_diff(
             overflow: auto;
             padding: 1rem;
             width: 100%;
-            min-width: 900px;
             min-height: 600px;
             box-sizing: border-box;
         }}
         .diff-viewer table.diff {{
             border-collapse: collapse;
             width: 100%;
-            min-width: 900px;
+            table-layout: fixed;
         }}
         .diff-viewer table.diff td:nth-of-type(3),
         .diff-viewer table.diff td:nth-of-type(6) {{
-            min-width: 450px;
+            width: 50%;
         }}
         .diff-viewer .diff_header,
         .diff-viewer .diff_next {{
@@ -87,14 +86,6 @@ def show_json_diff(
         }}
         </style>
         <div class="diff-viewer">{diff_table}</div>
-        <script>
-        const wrapper = document.querySelector('.diff-viewer');
-        const tables = wrapper.getElementsByTagName('table');
-        if (tables.length) {{
-            tables[0].style.width = '100%';
-            tables[0].style.minWidth = '900px';
-        }}
-        </script>
     """
     if container is not None:
         with container:
