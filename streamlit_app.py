@@ -61,7 +61,7 @@ def main() -> None:
         comp_df["casenumber"].astype(str)
         + " | "
         + comp_df["attachment_name"].astype(str)
-    )
+    ).tolist()
     if "case_idx" not in st.session_state:
         st.session_state["case_idx"] = 0
     if "prompt_idx" not in st.session_state:
@@ -71,6 +71,7 @@ def main() -> None:
     selected_case = case_sel.selectbox(
         "Case / Attachment", case_options, index=st.session_state["case_idx"]
     )
+
     if next_case.button("Next Case"):
         st.session_state["case_idx"] = (
             st.session_state["case_idx"] + 1
