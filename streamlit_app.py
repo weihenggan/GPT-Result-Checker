@@ -71,6 +71,7 @@ def main() -> None:
     selected_case = case_sel.selectbox(
         "Case / Attachment", case_options, index=st.session_state["case_idx"]
     )
+
     if next_case.button("Next Case"):
         st.session_state["case_idx"] = (
             st.session_state["case_idx"] + 1
