@@ -78,6 +78,7 @@ def main() -> None:
     selected_case = case_sel.selectbox(
         "Case / Attachment", case_options, index=st.session_state["case_idx"]
     )
+
     if next_case.button("Next Case"):
         st.session_state["case_idx"] = (
             st.session_state["case_idx"] + 1
@@ -86,6 +87,7 @@ def main() -> None:
     if first_case.button("First Case"):
         st.session_state["case_idx"] = 0
         _rerun()
+
     st.session_state["case_idx"] = case_options.index(selected_case)
     case_num, attach_name = selected_case.split(" | ")
 
@@ -101,6 +103,7 @@ def main() -> None:
     if first_prompt.button("First Prompt"):
         st.session_state["prompt_idx"] = 0
         _rerun()
+
     st.session_state["prompt_idx"] = PROMPT_COLUMNS.index(prompt)
 
     npr_row = df[
