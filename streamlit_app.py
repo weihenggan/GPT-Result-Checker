@@ -48,27 +48,52 @@ def show_json_diff(npr_text: str, sandbox_text: str) -> bool:
 
     html_content = f"""
         <style>
-        table.diff {{
-            font-family: monospace;
-            border-collapse: collapse;
-            width: 100%;
-        }}
-        .diff_header {{ background-color: #f2f2f2; }}
-        td.diff_header {{ text-align: left; }}
-        .diff_next {{ background-color: #f2f2f2; }}
-        .diff_add {{ background-color: #e6ffe6; }}
-        .diff_chg {{ background-color: #ffffcc; }}
-        .diff_sub {{ background-color: #ffe6e6; }}
-        .json-diff-wrapper {{
+        .diff-viewer {{
+            background: #fff;
+            color: #000;
+            font-family: 'Fira Mono', 'Menlo', 'Consolas', monospace;
             overflow: auto;
         }}
+        .diff-viewer table.diff {{
+            border-collapse: collapse;
+            width: 100%;
+            min-width: 1200px;
+        }}
+        .diff-viewer table.diff td:nth-of-type(3),
+        .diff-viewer table.diff td:nth-of-type(6) {{
+            min-width: 600px;
+        }}
+        .diff-viewer .diff_header {{ background-color: #f2f2f2; }}
+        .diff-viewer td.diff_header {{ text-align: left; }}
+        .diff-viewer .diff_next {{ background-color: #f2f2f2; }}
+        .diff-viewer .diff_add,
+        .diff-viewer .diff_chg,
+        .diff-viewer .diff_sub {{
+            background-color: #3498db !important;
+            color: #fff !important;
+            border-radius: 4px;
+        }}
+        .diff-viewer.dark-mode {{
+            background: #181a1b;
+            color: #fff;
+        }}
+        .diff-viewer.dark-mode .diff_header,
+        .diff-viewer.dark-mode .diff_next {{
+            background-color: #2a2c2e;
+        }}
         </style>
-        <div class="json-diff-wrapper">{diff_table}</div>
+        <div class="diff-viewer">{diff_table}</div>
         <script>
-        const wrapper = document.querySelector('.json-diff-wrapper');
+        const wrapper = document.querySelector('.diff-viewer');
         const tables = wrapper.getElementsByTagName('table');
         if (tables.length) {{
             tables[0].style.width = '100%';
+            tables[0].style.minWidth = '1200px';
+        }}
+        const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+            || document.body.className.toLowerCase().includes('dark');
+        if (isDark) {{
+            wrapper.classList.add('dark-mode');
         }}
         </script>
     """
