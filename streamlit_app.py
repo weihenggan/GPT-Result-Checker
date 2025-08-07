@@ -138,31 +138,36 @@ def main() -> None:
 
     label_options = ["", "Correct", "Acceptable", "Wrong"]
 
-    npr_index = label_options.index(validation.get("npr_label", ""))
+    # Keys for radio widgets
+    npr_key = f"npr_label_{key}"
+    sandbox_key = f"sandbox_label_{key}"
+
+    # Sync labels before widgets are created to avoid modifying widget state after instantiation
+    if npr_text == sandbox_text:
+        if st.session_state.get(npr_key) == "Correct":
+            st.session_state[sandbox_key] = "Correct"
+        elif st.session_state.get(sandbox_key) == "Correct":
+            st.session_state[npr_key] = "Correct"
+
+    # Determine currently selected labels
+    npr_selected = st.session_state.get(npr_key, validation.get("npr_label", ""))
+    sandbox_selected = st.session_state.get(sandbox_key, validation.get("sandbox_label", ""))
+
     npr_label = col1.radio(
         "Label",
         label_options,
-        index=npr_index,
+        index=label_options.index(npr_selected),
         format_func=lambda x: "Select Label" if x == "" else x,
-        key=f"npr_label_{key}",
+        key=npr_key,
     )
 
-    sandbox_index = label_options.index(validation.get("sandbox_label", ""))
     sandbox_label = col2.radio(
         "Label",
         label_options,
-        index=sandbox_index,
+        index=label_options.index(sandbox_selected),
         format_func=lambda x: "Select Label" if x == "" else x,
-        key=f"sandbox_label_{key}",
+        key=sandbox_key,
     )
-
-    if npr_text == sandbox_text:
-        if npr_label == "Correct" and sandbox_label != "Correct":
-            st.session_state[f"sandbox_label_{key}"] = "Correct"
-            _rerun()
-        if sandbox_label == "Correct" and npr_label != "Correct":
-            st.session_state[f"npr_label_{key}"] = "Correct"
-            _rerun()
 
     npr_acceptable_reason = ""
     if npr_label == "Acceptable":
