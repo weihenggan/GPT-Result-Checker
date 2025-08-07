@@ -27,7 +27,7 @@ python compare_prompt_results.py input.csv output.xlsx
 streamlit run streamlit_app.py
 ```
 
-Upload a CSV file with results to generate an interactive comparison and download an Excel report.
+Upload a CSV file with results to generate an interactive comparison and download an Excel report. Each NPR and Sandbox output can be individually labelled as *Correct*, *Acceptable*, or *Wrong*, and exported reports are saved with a timestamped filename.
 
 ## License
 

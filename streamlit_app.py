@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import io
+from datetime import datetime
 
 import pandas as pd
 import streamlit as st
@@ -86,24 +87,44 @@ def main() -> None:
     validation = st.session_state["validations"].get(key, {})
 
     label_options = ["", "Correct", "Acceptable", "Wrong"]
-    index = label_options.index(validation.get("label", ""))
-    label = st.radio(
+
+    npr_index = label_options.index(validation.get("npr_label", ""))
+    npr_label = col1.radio(
         "Label",
         label_options,
-        index=index,
+        index=npr_index,
         format_func=lambda x: "Select Label" if x == "" else x,
-        key=f"label_{key}",
+        key=f"npr_label_{key}",
     )
 
-    acceptable_reason = ""
-    if label == "Acceptable":
-        acceptable_reason = st.text_input(
+    sandbox_index = label_options.index(validation.get("sandbox_label", ""))
+    sandbox_label = col2.radio(
+        "Label",
+        label_options,
+        index=sandbox_index,
+        format_func=lambda x: "Select Label" if x == "" else x,
+        key=f"sandbox_label_{key}",
+    )
+
+    npr_acceptable_reason = ""
+    if npr_label == "Acceptable":
+        npr_acceptable_reason = col1.text_input(
             "Acceptable Reason",
-            value=validation.get("acceptable_reason", ""),
-            key=f"acceptable_{key}",
+            value=validation.get("npr_acceptable_reason", ""),
+            key=f"npr_acceptable_{key}",
         )
     else:
-        st.session_state.pop(f"acceptable_{key}", None)
+        st.session_state.pop(f"npr_acceptable_{key}", None)
+
+    sandbox_acceptable_reason = ""
+    if sandbox_label == "Acceptable":
+        sandbox_acceptable_reason = col2.text_input(
+            "Acceptable Reason",
+            value=validation.get("sandbox_acceptable_reason", ""),
+            key=f"sandbox_acceptable_{key}",
+        )
+    else:
+        st.session_state.pop(f"sandbox_acceptable_{key}", None)
 
     standard_response = st.text_area(
         "Standard Response",
@@ -118,15 +139,21 @@ def main() -> None:
         key=f"remark_{key}",
     )
 
-    if label:
+    if npr_label and sandbox_label:
         st.session_state["validations"][key] = {
             "case_num": case_num,
             "attachment_name": attach_name,
             "prompt": prompt,
             "npr": npr_text,
             "sandbox": sandbox_text,
-            "label": label,
-            "acceptable_reason": st.session_state.get(f"acceptable_{key}", ""),
+            "npr_label": npr_label,
+            "npr_acceptable_reason": st.session_state.get(
+                f"npr_acceptable_{key}", ""
+            ),
+            "sandbox_label": sandbox_label,
+            "sandbox_acceptable_reason": st.session_state.get(
+                f"sandbox_acceptable_{key}", ""
+            ),
             "standard_response": standard_response,
             "remark": remark,
         }
@@ -144,10 +171,11 @@ def main() -> None:
         summary_df.to_excel(writer, sheet_name="Summary", index=False)
     buffer.seek(0)
 
+    timestamp = datetime.now().strftime("%y%m%d_%H%M%S")
     st.download_button(
         label="Download Excel Report",
         data=buffer,
-        file_name="comparison_report.xlsx",
+        file_name=f"{timestamp}_comparison_report.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 
@@ -160,9 +188,20 @@ def main() -> None:
                 "Prompt": [v["prompt"] for v in st.session_state["validations"].values()],
                 "NPR Result": [v["npr"] for v in st.session_state["validations"].values()],
                 "Sandbox Result": [v["sandbox"] for v in st.session_state["validations"].values()],
-                "Label": [v["label"] for v in st.session_state["validations"].values()],
-                "Acceptable Reason": [v["acceptable_reason"] for v in st.session_state["validations"].values()],
-                "Standard Response": [v["standard_response"] for v in st.session_state["validations"].values()],
+                "NPR Label": [v["npr_label"] for v in st.session_state["validations"].values()],
+                "NPR Acceptable Reason": [
+                    v["npr_acceptable_reason"] for v in st.session_state["validations"].values()
+                ],
+                "Sandbox Label": [
+                    v["sandbox_label"] for v in st.session_state["validations"].values()
+                ],
+                "Sandbox Acceptable Reason": [
+                    v["sandbox_acceptable_reason"]
+                    for v in st.session_state["validations"].values()
+                ],
+                "Standard Response": [
+                    v["standard_response"] for v in st.session_state["validations"].values()
+                ],
                 "Remark": [v["remark"] for v in st.session_state["validations"].values()],
             }
         )
@@ -170,7 +209,7 @@ def main() -> None:
         st.download_button(
             "Save Validation Results",
             data=csv_data,
-            file_name="validation_results.csv",
+            file_name=f"{timestamp}_validation_results.csv",
             mime="text/csv",
         )
 
