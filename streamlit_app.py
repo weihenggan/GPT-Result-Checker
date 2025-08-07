@@ -17,6 +17,13 @@ from compare_prompt_results import (
 )
 
 
+def _rerun() -> None:
+    """Trigger a rerun compatible across Streamlit versions."""
+    rerun = getattr(st, "rerun", getattr(st, "experimental_rerun", None))
+    if rerun:
+        rerun()
+
+
 def main() -> None:
     """Run the Streamlit application."""
     st.set_page_config(layout="wide")
@@ -76,10 +83,11 @@ def main() -> None:
         st.session_state["case_idx"] = (
             st.session_state["case_idx"] + 1
         ) % len(case_options)
-        st.experimental_rerun()
+        _rerun()
     if first_case.button("First Case"):
         st.session_state["case_idx"] = 0
-        st.experimental_rerun()
+        _rerun()
+
     st.session_state["case_idx"] = case_options.index(selected_case)
     case_num, attach_name = selected_case.split(" | ")
 
@@ -91,10 +99,11 @@ def main() -> None:
         st.session_state["prompt_idx"] = (
             st.session_state["prompt_idx"] + 1
         ) % len(PROMPT_COLUMNS)
-        st.experimental_rerun()
+        _rerun()
     if first_prompt.button("First Prompt"):
         st.session_state["prompt_idx"] = 0
-        st.experimental_rerun()
+        _rerun()
+
     st.session_state["prompt_idx"] = PROMPT_COLUMNS.index(prompt)
 
     npr_row = df[
