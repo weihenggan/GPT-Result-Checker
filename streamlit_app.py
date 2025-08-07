@@ -11,6 +11,7 @@ from datetime import datetime
 import pandas as pd
 import streamlit as st
 from streamlit.components.v1 import html as st_html
+from streamlit.delta_generator import DeltaGenerator
 
 from compare_prompt_results import (
     PROMPT_COLUMNS,
@@ -19,7 +20,11 @@ from compare_prompt_results import (
 )
 
 
-def show_json_diff(npr_text: str, sandbox_text: str) -> bool:
+def show_json_diff(
+    npr_text: str,
+    sandbox_text: str,
+    container: DeltaGenerator | None = None,
+) -> bool:
     """Render a side-by-side JSON diff view.
 
     Returns ``True`` if both inputs are valid JSON and the diff was rendered,
@@ -91,7 +96,11 @@ def show_json_diff(npr_text: str, sandbox_text: str) -> bool:
         }}
         </script>
     """
-    st_html(html_content, height=600)
+    if container is not None:
+        with container:
+            st_html(html_content, height=600)
+    else:
+        st_html(html_content, height=600)
     return True
 
 
@@ -157,7 +166,9 @@ def main() -> None:
     npr_text = npr_row[prompt].iloc[0] if not npr_row.empty else ""
     sandbox_text = sandbox_row[prompt].iloc[0] if not sandbox_row.empty else ""
 
-    rendered = show_json_diff(npr_text, sandbox_text)
+    st.subheader("JSON Diff")
+    diff_container = st.container()
+    rendered = show_json_diff(npr_text, sandbox_text, diff_container)
 
     col1, col2 = st.columns(2)
     if rendered:
