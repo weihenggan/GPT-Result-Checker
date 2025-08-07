@@ -157,20 +157,17 @@ def main() -> None:
     npr_text = npr_row[prompt].iloc[0] if not npr_row.empty else ""
     sandbox_text = sandbox_row[prompt].iloc[0] if not sandbox_row.empty else ""
 
-    st.subheader("JSON Diff")
-    diff_container = st.container()
-    rendered = show_json_diff(npr_text, sandbox_text, diff_container)
+    rendered = True
+    try:
+        npr_pretty = json.dumps(json.loads(npr_text), indent=2, sort_keys=True)
+        sandbox_pretty = json.dumps(json.loads(sandbox_text), indent=2, sort_keys=True)
+    except (TypeError, ValueError):
+        rendered = False
 
     col1, col2 = st.columns(2)
     if rendered:
-        try:
-            col1.code(json.dumps(json.loads(npr_text), indent=2, sort_keys=True), language="json")
-        except (TypeError, ValueError):
-            col1.text_area("NPR", npr_text, height=500)
-        try:
-            col2.code(json.dumps(json.loads(sandbox_text), indent=2, sort_keys=True), language="json")
-        except (TypeError, ValueError):
-            col2.text_area("Sandbox", sandbox_text, height=500)
+        col1.code(npr_pretty, language="json")
+        col2.code(sandbox_pretty, language="json")
     else:
         col1.text_area("NPR", npr_text, height=500)
         col2.text_area("Sandbox", sandbox_text, height=500)
@@ -251,6 +248,10 @@ def main() -> None:
         }
     else:
         st.session_state["validations"].pop(key, None)
+
+    st.subheader("JSON Diff")
+    diff_container = st.container()
+    show_json_diff(npr_text, sandbox_text, diff_container)
 
     # ``show_json_diff`` already visualizes differences if present, so the
     # textual diff output previously displayed here is no longer required.
