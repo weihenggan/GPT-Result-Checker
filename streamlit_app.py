@@ -140,9 +140,52 @@ def main() -> None:
         + " | "
         + comp_df["attachment_name"].astype(str)
     )
-    selected_case = st.selectbox("Case / Attachment", case_options)
+    if "case_index" not in st.session_state:
+        st.session_state["case_index"] = 0
+    if "prompt_index" not in st.session_state:
+        st.session_state["prompt_index"] = 0
+
+    case_col, next_case_col, first_case_col = st.columns([8, 1, 1])
+    selected_case = case_col.selectbox(
+        "Case / Attachment",
+        case_options,
+        index=st.session_state["case_index"],
+        key="case_select",
+    )
+    if next_case_col.button("Next", key="case_next"):
+        st.session_state["case_index"] = (
+            (st.session_state["case_index"] + 1) % len(case_options)
+        )
+        st.session_state["case_select"] = case_options[
+            st.session_state["case_index"]
+        ]
+        st.experimental_rerun()
+    if first_case_col.button("First", key="case_first"):
+        st.session_state["case_index"] = 0
+        st.session_state["case_select"] = case_options[0]
+        st.experimental_rerun()
+
     case_num, attach_name = selected_case.split(" | ")
-    prompt = st.selectbox("Prompt", PROMPT_COLUMNS)
+
+    prompt_col, next_prompt_col, first_prompt_col = st.columns([8, 1, 1])
+    prompt = prompt_col.selectbox(
+        "Prompt",
+        PROMPT_COLUMNS,
+        index=st.session_state["prompt_index"],
+        key="prompt_select",
+    )
+    if next_prompt_col.button("Next", key="prompt_next"):
+        st.session_state["prompt_index"] = (
+            (st.session_state["prompt_index"] + 1) % len(PROMPT_COLUMNS)
+        )
+        st.session_state["prompt_select"] = PROMPT_COLUMNS[
+            st.session_state["prompt_index"]
+        ]
+        st.experimental_rerun()
+    if first_prompt_col.button("First", key="prompt_first"):
+        st.session_state["prompt_index"] = 0
+        st.session_state["prompt_select"] = PROMPT_COLUMNS[0]
+        st.experimental_rerun()
 
     npr_row = df[
         (df["casenumber"].astype(str) == case_num)
