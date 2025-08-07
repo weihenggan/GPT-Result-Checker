@@ -4,17 +4,76 @@
 from __future__ import annotations
 
 import io
+import json
+import difflib
 from datetime import datetime
 
 import pandas as pd
 import streamlit as st
+from streamlit.components.v1 import html as st_html
 
 from compare_prompt_results import (
     PROMPT_COLUMNS,
-    compare_values,
     generate_comparison,
     generate_summary,
 )
+
+
+def show_json_diff(npr_text: str, sandbox_text: str) -> bool:
+    """Render a side-by-side JSON diff view.
+
+    Returns ``True`` if both inputs are valid JSON and the diff was rendered,
+    otherwise returns ``False`` so the caller can fall back to plain text
+    rendering.
+    """
+
+    try:
+        npr_json = json.loads(npr_text)
+        sandbox_json = json.loads(sandbox_text)
+    except (TypeError, ValueError):
+        return False
+
+    npr_pretty = json.dumps(npr_json, indent=2, sort_keys=True)
+    sandbox_pretty = json.dumps(sandbox_json, indent=2, sort_keys=True)
+
+    diff = difflib.HtmlDiff(wrapcolumn=80)
+    diff_table = diff.make_table(
+        npr_pretty.splitlines(),
+        sandbox_pretty.splitlines(),
+        fromdesc="NPR",
+        todesc="Sandbox",
+        context=True,
+        numlines=2,
+    )
+
+    html_content = f"""
+        <style>
+        table.diff {{
+            font-family: monospace;
+            border-collapse: collapse;
+            width: 100%;
+        }}
+        .diff_header {{ background-color: #f2f2f2; }}
+        td.diff_header {{ text-align: left; }}
+        .diff_next {{ background-color: #f2f2f2; }}
+        .diff_add {{ background-color: #e6ffe6; }}
+        .diff_chg {{ background-color: #ffffcc; }}
+        .diff_sub {{ background-color: #ffe6e6; }}
+        .json-diff-wrapper {{
+            overflow: auto;
+        }}
+        </style>
+        <div class="json-diff-wrapper">{diff_table}</div>
+        <script>
+        const wrapper = document.querySelector('.json-diff-wrapper');
+        const tables = wrapper.getElementsByTagName('table');
+        if (tables.length) {{
+            tables[0].style.width = '100%';
+        }}
+        </script>
+    """
+    st_html(html_content, height=600)
+    return True
 
 
 def main() -> None:
@@ -79,9 +138,21 @@ def main() -> None:
     npr_text = npr_row[prompt].iloc[0] if not npr_row.empty else ""
     sandbox_text = sandbox_row[prompt].iloc[0] if not sandbox_row.empty else ""
 
+    rendered = show_json_diff(npr_text, sandbox_text)
+
     col1, col2 = st.columns(2)
-    col1.text_area("NPR", npr_text, height=500)
-    col2.text_area("Sandbox", sandbox_text, height=500)
+    if rendered:
+        try:
+            col1.code(json.dumps(json.loads(npr_text), indent=2, sort_keys=True), language="json")
+        except (TypeError, ValueError):
+            col1.text_area("NPR", npr_text, height=500)
+        try:
+            col2.code(json.dumps(json.loads(sandbox_text), indent=2, sort_keys=True), language="json")
+        except (TypeError, ValueError):
+            col2.text_area("Sandbox", sandbox_text, height=500)
+    else:
+        col1.text_area("NPR", npr_text, height=500)
+        col2.text_area("Sandbox", sandbox_text, height=500)
 
     key = f"{case_num}|{attach_name}|{prompt}"
     validation = st.session_state["validations"].get(key, {})
@@ -160,10 +231,8 @@ def main() -> None:
     else:
         st.session_state["validations"].pop(key, None)
 
-    status, detail = compare_values(npr_text, sandbox_text)
-    if status == "DIFFERENT" and detail:
-        st.subheader("Diff")
-        st.code(detail)
+    # ``show_json_diff`` already visualizes differences if present, so the
+    # textual diff output previously displayed here is no longer required.
 
     buffer = io.BytesIO()
     with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
