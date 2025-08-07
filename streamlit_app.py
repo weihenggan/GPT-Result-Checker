@@ -144,10 +144,12 @@ def main() -> None:
 
     # Sync labels before widgets are created to avoid modifying widget state after instantiation
     if npr_text == sandbox_text:
-        if st.session_state.get(npr_key) == "Correct":
-            st.session_state[sandbox_key] = "Correct"
-        elif st.session_state.get(sandbox_key) == "Correct":
-            st.session_state[npr_key] = "Correct"
+        npr_state = st.session_state.get(npr_key)
+        sandbox_state = st.session_state.get(sandbox_key)
+        if npr_state in label_options[1:]:
+            st.session_state[sandbox_key] = npr_state
+        elif sandbox_state in label_options[1:]:
+            st.session_state[npr_key] = sandbox_state
 
     # Determine currently selected labels
     npr_selected = st.session_state.get(npr_key, validation.get("npr_label", ""))
