@@ -49,37 +49,36 @@ def show_json_diff(npr_text: str, sandbox_text: str) -> bool:
     html_content = f"""
         <style>
         .diff-viewer {{
-            background: #fff;
-            color: #000;
+            background: #1e1e1e;
+            color: #fff;
             font-family: 'Fira Mono', 'Menlo', 'Consolas', monospace;
             overflow: auto;
+            padding: 1rem;
+            width: 100%;
+            min-width: 900px;
+            min-height: 600px;
+            box-sizing: border-box;
         }}
         .diff-viewer table.diff {{
             border-collapse: collapse;
             width: 100%;
-            min-width: 1200px;
+            min-width: 900px;
         }}
         .diff-viewer table.diff td:nth-of-type(3),
         .diff-viewer table.diff td:nth-of-type(6) {{
-            min-width: 600px;
+            min-width: 450px;
         }}
-        .diff-viewer .diff_header {{ background-color: #f2f2f2; }}
+        .diff-viewer .diff_header,
+        .diff-viewer .diff_next {{
+            background-color: #2a2c2e;
+        }}
         .diff-viewer td.diff_header {{ text-align: left; }}
-        .diff-viewer .diff_next {{ background-color: #f2f2f2; }}
         .diff-viewer .diff_add,
         .diff-viewer .diff_chg,
         .diff-viewer .diff_sub {{
             background-color: #3498db !important;
             color: #fff !important;
             border-radius: 4px;
-        }}
-        .diff-viewer.dark-mode {{
-            background: #181a1b;
-            color: #fff;
-        }}
-        .diff-viewer.dark-mode .diff_header,
-        .diff-viewer.dark-mode .diff_next {{
-            background-color: #2a2c2e;
         }}
         </style>
         <div class="diff-viewer">{diff_table}</div>
@@ -88,12 +87,7 @@ def show_json_diff(npr_text: str, sandbox_text: str) -> bool:
         const tables = wrapper.getElementsByTagName('table');
         if (tables.length) {{
             tables[0].style.width = '100%';
-            tables[0].style.minWidth = '1200px';
-        }}
-        const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-            || document.body.className.toLowerCase().includes('dark');
-        if (isDark) {{
-            wrapper.classList.add('dark-mode');
+            tables[0].style.minWidth = '900px';
         }}
         </script>
     """
