@@ -18,6 +18,7 @@ from compare_prompt_results import (
 
 def main() -> None:
     """Run the Streamlit application."""
+    st.set_page_config(layout="wide")
     st.title("GPT Prompt Comparison Viewer")
     st.write(
         "Upload a CSV file containing GPT extraction results for NPR and Sandbox "
@@ -67,8 +68,8 @@ def main() -> None:
     sandbox_text = sandbox_row[prompt].iloc[0] if not sandbox_row.empty else ""
 
     col1, col2 = st.columns(2)
-    col1.text_area("NPR", npr_text, height=300)
-    col2.text_area("Sandbox", sandbox_text, height=300)
+    col1.text_area("NPR", npr_text, height=500)
+    col2.text_area("Sandbox", sandbox_text, height=500)
 
     status, detail = compare_values(npr_text, sandbox_text)
     if status == "DIFFERENT" and detail:
