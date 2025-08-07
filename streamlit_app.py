@@ -74,11 +74,16 @@ def main() -> None:
     if "prompt_idx" not in st.session_state:
         st.session_state["prompt_idx"] = 0
 
-    case_sel, next_case, first_case = st.columns([3, 1, 1])
+    case_sel, prev_case, next_case, first_case = st.columns([3, 1, 1, 1])
     selected_case = case_sel.selectbox(
         "Case / Attachment", case_options, index=st.session_state["case_idx"]
     )
 
+    if prev_case.button("Prev Case"):
+        st.session_state["case_idx"] = (
+            st.session_state["case_idx"] - 1
+        ) % len(case_options)
+        _rerun()
     if next_case.button("Next Case"):
         st.session_state["case_idx"] = (
             st.session_state["case_idx"] + 1
@@ -91,10 +96,15 @@ def main() -> None:
     st.session_state["case_idx"] = case_options.index(selected_case)
     case_num, attach_name = selected_case.split(" | ")
 
-    prompt_sel, next_prompt, first_prompt = st.columns([3, 1, 1])
+    prompt_sel, prev_prompt, next_prompt, first_prompt = st.columns([3, 1, 1, 1])
     prompt = prompt_sel.selectbox(
         "Prompt", PROMPT_COLUMNS, index=st.session_state["prompt_idx"]
     )
+    if prev_prompt.button("Prev Prompt"):
+        st.session_state["prompt_idx"] = (
+            st.session_state["prompt_idx"] - 1
+        ) % len(PROMPT_COLUMNS)
+        _rerun()
     if next_prompt.button("Next Prompt"):
         st.session_state["prompt_idx"] = (
             st.session_state["prompt_idx"] + 1
@@ -146,6 +156,14 @@ def main() -> None:
         key=f"sandbox_label_{key}",
     )
 
+    if npr_text == sandbox_text:
+        if npr_label == "Correct" and sandbox_label != "Correct":
+            st.session_state[f"sandbox_label_{key}"] = "Correct"
+            _rerun()
+        if sandbox_label == "Correct" and npr_label != "Correct":
+            st.session_state[f"npr_label_{key}"] = "Correct"
+            _rerun()
+
     npr_acceptable_reason = ""
     if npr_label == "Acceptable":
         npr_acceptable_reason = col1.text_input(
@@ -166,11 +184,17 @@ def main() -> None:
     else:
         st.session_state.pop(f"sandbox_acceptable_{key}", None)
 
+    standard_key = f"standard_{key}"
+    if npr_label == "Correct":
+        st.session_state[standard_key] = npr_text
+    elif sandbox_label == "Correct":
+        st.session_state[standard_key] = sandbox_text
+
     standard_response = st.text_area(
         "Standard Response",
-        value=validation.get("standard_response", ""),
+        value=st.session_state.get(standard_key, validation.get("standard_response", "")),
         height=120,
-        key=f"standard_{key}",
+        key=standard_key,
     )
     remark = st.text_area(
         "Remark",
