@@ -40,13 +40,18 @@ import pandas as pd
 # Columns that contain prompt results. To add new prompts, append their column
 # names to this list.
 PROMPT_COLUMNS: List[str] = [
+    "SoldToCodeExtractor",
     "InputValidator",
-    "UnitPriceChecker",
+    "FlagsProvider",
     "PartNumberInfo",
+    "QuantityInfo",
     "CurrencyExtractor",
     "ProjectInfo",
     "ResultValidator",
     "Response",
+    "TranslatorZhToEng",
+    "TranslatorEngToZh",
+    "TranslationValidator",
 ]
 
 # ---------------------------------------------------------------------------
